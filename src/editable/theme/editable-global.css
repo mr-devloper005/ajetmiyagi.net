@@ -7,16 +7,14 @@
   - Editable-only typography
   - Selection color
   - Scrollbar feel
+  - Site-wide animation utilities (reveal, float, marquee, wave)
   - Article body typography accents
 
   Do not add data fetching, scripts, or route logic here.
 */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
-
-/* Per-task display + body typefaces (consumed via task-themes.ts). */
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&family=Syne:wght@500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
 
 body {
   background-color: var(--slot4-page-bg) !important;
@@ -25,12 +23,13 @@ body {
 }
 
 .editable-site-root {
-  /* Yelp-style clean sans, used for both display and body. */
-  --editable-font-display: 'Inter', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
-  --editable-font-body: 'Inter', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  /* Geometric SaaS voice: Poppins for display, DM Sans for comfortable reading. */
+  --editable-font-display: 'Poppins', 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --editable-font-body: 'DM Sans', 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
   /* Premium easing curve used across every hover + transition. */
   --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
   font-family: var(--editable-font-body);
+  overflow-x: hidden;
 }
 
 /*
@@ -65,15 +64,217 @@ body {
   will-change: transform, opacity;
 }
 
+/* ── Reusable animation utilities ─────────────────────────────────────────── */
+
+@keyframes eg-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 28px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes eg-slide-left {
+  from {
+    opacity: 0;
+    transform: translate3d(-32px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes eg-slide-right {
+  from {
+    opacity: 0;
+    transform: translate3d(32px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes eg-zoom {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes eg-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -14px, 0);
+  }
+}
+
+@keyframes eg-pulse-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+
+@keyframes eg-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes eg-drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 1200px 0;
+  }
+}
+
+.eg-rise {
+  animation: eg-rise 0.85s var(--ease-premium) backwards;
+}
+.eg-slide-left {
+  animation: eg-slide-left 0.9s var(--ease-premium) backwards;
+}
+.eg-slide-right {
+  animation: eg-slide-right 0.9s var(--ease-premium) backwards;
+}
+.eg-zoom {
+  animation: eg-zoom 0.9s var(--ease-premium) backwards;
+}
+.eg-float {
+  animation: eg-float 7s ease-in-out infinite;
+}
+.eg-float-slow {
+  animation: eg-float 11s ease-in-out infinite;
+}
+.eg-delay-1 {
+  animation-delay: 0.12s;
+}
+.eg-delay-2 {
+  animation-delay: 0.24s;
+}
+.eg-delay-3 {
+  animation-delay: 0.36s;
+}
+.eg-delay-4 {
+  animation-delay: 0.48s;
+}
+.eg-delay-5 {
+  animation-delay: 0.6s;
+}
+
+/* Auto-scrolling rail: the track holds the items twice, so translating it by
+   -50% loops seamlessly. Pausing on hover keeps the content readable. */
+.eg-marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.eg-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: eg-marquee 46s linear infinite;
+}
+.eg-marquee-track-fast {
+  animation-duration: 30s;
+}
+.eg-marquee-reverse {
+  animation-direction: reverse;
+}
+.eg-marquee:hover .eg-marquee-track,
+.eg-marquee-track:focus-within {
+  animation-play-state: paused;
+}
+
+.eg-pulse-ring::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  animation: eg-pulse-ring 2.6s ease-out infinite;
+}
+
+/* Underline that grows from the left on hover — used across nav + text links. */
+.eg-underline {
+  position: relative;
+}
+.eg-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -6px;
+  height: 2px;
+  width: 100%;
+  border-radius: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s var(--ease-premium);
+}
+.eg-underline:hover::after,
+.eg-underline[data-active='true']::after {
+  transform: scaleX(1);
+}
+
+/* Card sheen that sweeps across on hover. */
+.eg-sheen {
+  position: relative;
+  overflow: hidden;
+}
+.eg-sheen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform 0.9s var(--ease-premium);
+  pointer-events: none;
+}
+.eg-sheen:hover::before {
+  transform: translateX(120%);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .editable-enter > * {
-    animation: none;
+  .editable-enter > *,
+  .eg-rise,
+  .eg-slide-left,
+  .eg-slide-right,
+  .eg-zoom,
+  .eg-float,
+  .eg-float-slow,
+  .eg-marquee-track,
+  .eg-pulse-ring::after {
+    animation: none !important;
   }
   .editable-site-root *,
   .editable-site-root *::before,
   .editable-site-root *::after {
     transition-duration: 0.001ms !important;
-    animation-duration: 0.001ms !important;
   }
 }
 
@@ -96,28 +297,109 @@ body {
   font-family: var(--editable-font-body);
 }
 
+/* High-contrast selection: white text on the brand blue, readable everywhere. */
 ::selection {
-  background: color-mix(in oklab, var(--slot4-accent-fill) 28%, transparent);
-  color: var(--slot4-page-text);
+  background: #0b4bc4;
+  color: #ffffff;
+  text-shadow: none;
+}
+
+::-moz-selection {
+  background: #0b4bc4;
+  color: #ffffff;
+  text-shadow: none;
+}
+
+/* On the blue bands the inverse reads better. */
+.eg-on-blue ::selection,
+.eg-on-blue::selection {
+  background: #ffffff;
+  color: #0b4bc4;
+}
+
+.eg-on-blue ::-moz-selection,
+.eg-on-blue::-moz-selection {
+  background: #ffffff;
+  color: #0b4bc4;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: color-mix(in oklab, var(--slot4-page-bg) 88%, black);
+  background: #eef5fd;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in oklab, var(--slot4-accent) 45%, transparent);
+  background: color-mix(in oklab, var(--slot4-accent) 55%, white);
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in oklab, var(--slot4-accent) 68%, transparent);
+  background: var(--slot4-accent);
 }
 
+/* ── Long-form article body ───────────────────────────────────────────────── */
 .article-content h2 {
-  color: var(--slot4-accent);
+  font-family: var(--editable-font-display);
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 2.25rem;
+  margin-bottom: 0.85rem;
+  color: var(--slot4-page-text);
+}
+
+.article-content h3 {
+  font-family: var(--editable-font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-top: 1.85rem;
+  margin-bottom: 0.65rem;
+}
+
+.article-content p {
+  margin-bottom: 1.15rem;
+}
+
+.article-content ul,
+.article-content ol {
+  margin: 1.15rem 0 1.15rem 1.35rem;
+  list-style: disc;
+}
+
+.article-content ol {
+  list-style: decimal;
+}
+
+.article-content li {
+  margin-bottom: 0.5rem;
+}
+
+.article-content blockquote {
+  margin: 1.75rem 0;
+  border-left: 4px solid var(--slot4-accent);
+  background: var(--slot4-accent-soft);
+  padding: 1rem 1.35rem;
+  border-radius: 0 1rem 1rem 0;
+  font-style: italic;
 }
 
 .article-content a {
   color: var(--slot4-accent-fill);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.article-content a:hover {
+  color: var(--slot4-accent-deep, #08379a);
+}
+
+.article-content img {
+  border-radius: 1.25rem;
+  margin: 1.5rem 0;
+  max-width: 100%;
+  height: auto;
 }

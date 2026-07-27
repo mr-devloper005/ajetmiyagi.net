@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { MessageSquare, Search } from 'lucide-react'
+import { ArrowLeft, ArrowRight, MessageSquare, RefreshCw, Search } from 'lucide-react'
 import { EditableSiteShell } from '@/editable/shell/EditableSiteShell'
 
 type StoredComment = {
@@ -16,7 +16,9 @@ type StoredComment = {
 }
 
 const COMMENTS_PER_PAGE = 8
-const COMMENT_KEY_PREFIX = 'slot4:article-comments:'
+// Both key shapes have been used by the comment form over time; read either so
+// nothing a visitor wrote in this browser silently disappears from this page.
+const COMMENT_KEY_PREFIXES = ['slot4:article-comments:', 'editable:article-comments:']
 
 const formatDate = (value: string) => {
   try {
@@ -32,12 +34,15 @@ const formatDate = (value: string) => {
   }
 }
 
+const initial = (name: string) => (name.trim()[0] || 'G').toUpperCase()
+
 const readCommentsFromStorage = (): StoredComment[] => {
   const items: StoredComment[] = []
   for (let index = 0; index < window.localStorage.length; index += 1) {
     const key = window.localStorage.key(index)
-    if (!key?.startsWith(COMMENT_KEY_PREFIX)) continue
-    const articleSlug = key.replace(COMMENT_KEY_PREFIX, '')
+    const prefix = COMMENT_KEY_PREFIXES.find((candidate) => key?.startsWith(candidate))
+    if (!key || !prefix) continue
+    const articleSlug = key.replace(prefix, '')
     try {
       const parsed = JSON.parse(window.localStorage.getItem(key) || '[]')
       if (!Array.isArray(parsed)) continue
@@ -92,76 +97,124 @@ export default function CommentsPage() {
 
   return (
     <EditableSiteShell>
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <section className="rounded-[2rem] border border-border bg-card p-6 shadow-sm sm:p-8">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-                <MessageSquare className="h-4 w-4" /> Local comments
-              </p>
-              <h1 className="mt-4 text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">Comments</h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
-                Review comments saved in this browser from article pages.
-              </p>
-            </div>
-            <button type="button" className="rounded-full border border-[var(--editable-border)] px-4 py-2 text-sm font-black" onClick={refreshComments}>Refresh comments</button>
+      <main className="min-h-screen bg-[var(--slot4-panel-bg)] text-[var(--slot4-page-text)]">
+        <section className="eg-on-blue relative overflow-hidden bg-[var(--slot4-accent)] text-white">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 opacity-30 [background:radial-gradient(55%_70%_at_15%_0%,rgba(255,255,255,0.3),transparent_60%)]"
+          />
+          <div className="relative mx-auto max-w-[var(--editable-container)] px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
+            <p className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em]">
+              <MessageSquare className="h-3.5 w-3.5" /> Saved in this browser
+            </p>
+            <h1 className="editable-display mt-5 text-3xl font-extrabold leading-[1.1] tracking-[-0.035em] sm:text-4xl">Your comments</h1>
+            <p className="mt-4 max-w-2xl text-base leading-8 text-white/85">
+              Every comment you leave on a guide is stored locally on this device. Review them here, or jump straight back to the discussion.
+            </p>
           </div>
+        </section>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative w-full sm:max-w-md">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <section className="mx-auto max-w-[var(--editable-container)] px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+          <div className="flex flex-col gap-4 rounded-3xl border border-[var(--editable-border)] bg-white p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <label className="flex min-w-0 flex-1 items-center gap-3 rounded-full border border-[var(--editable-border)] bg-[var(--slot4-panel-bg)] px-5 py-3 transition focus-within:border-[var(--slot4-accent)] sm:max-w-md">
+              <Search className="h-4 w-4 shrink-0 text-[var(--slot4-accent)]" />
               <input
                 value={query}
                 onChange={(event) => {
                   setQuery(event.target.value)
                   setPage(1)
                 }}
-                placeholder="Search comments..."
-                className="h-11 w-full rounded-2xl border border-[var(--editable-border)] bg-white pl-9 pr-3 text-sm outline-none"
+                placeholder="Search your comments…"
+                className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--slot4-soft-muted-text)]"
               />
+            </label>
+            <div className="flex items-center gap-3">
+              <p className="text-sm text-[var(--slot4-muted-text)]">
+                {filtered.length} comment{filtered.length === 1 ? '' : 's'}
+              </p>
+              <button
+                type="button"
+                onClick={refreshComments}
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--editable-border)] px-5 py-2.5 text-sm font-semibold transition duration-300 hover:-translate-y-0.5 hover:border-[var(--slot4-accent)] hover:text-[var(--slot4-accent)]"
+              >
+                <RefreshCw className="h-4 w-4" /> Refresh
+              </button>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {filtered.length} comment{filtered.length === 1 ? '' : 's'} found
-            </p>
           </div>
-        </section>
 
-        {visibleComments.length ? (
-          <section className="mt-8 grid gap-4">
-            {visibleComments.map((item) => (
-              <article key={`${item.articleSlug}-${item.id}`} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="font-semibold text-foreground">{item.name}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{formatDate(item.createdAt)}</p>
+          {visibleComments.length ? (
+            <div className="mt-8 grid gap-4">
+              {visibleComments.map((item) => (
+                <article
+                  key={`${item.articleSlug}-${item.id}`}
+                  className="rounded-3xl border border-[var(--editable-border)] bg-white p-6 transition duration-500 hover:-translate-y-1 hover:border-[var(--slot4-accent)] hover:shadow-[0_18px_44px_rgba(11,75,196,0.12)]"
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="editable-display flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--slot4-accent-soft)] text-sm font-bold text-[var(--slot4-accent)]">
+                        {initial(item.name)}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-[var(--slot4-page-text)]">{item.name}</p>
+                        <p className="mt-0.5 text-xs text-[var(--slot4-soft-muted-text)]">{formatDate(item.createdAt)}</p>
+                      </div>
+                    </div>
+                    {item.articleSlug ? (
+                      <Link
+                        href={`/article/${item.articleSlug}`}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--slot4-accent)] transition hover:gap-2.5"
+                      >
+                        Open guide <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    ) : null}
                   </div>
-                  {item.articleSlug ? (
-                    <Link href={`/article/${item.articleSlug}`} className="text-sm text-primary underline-offset-4 hover:underline">
-                      Open article
-                    </Link>
-                  ) : null}
-                </div>
-                {item.articleTitle ? <p className="mt-4 text-sm font-medium text-foreground">{item.articleTitle}</p> : null}
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.comment}</p>
-              </article>
-            ))}
-          </section>
-        ) : (
-          <section className="mt-8 rounded-2xl border border-dashed border-border bg-card/70 p-8 text-center">
-            <h2 className="text-xl font-semibold text-foreground">No comments yet</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Add a comment on any article page and it will appear here.</p>
-          </section>
-        )}
-
-        {filtered.length > COMMENTS_PER_PAGE ? (
-          <div className="mt-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
-            <span>Page {currentPage} of {totalPages}</span>
-            <div className="flex gap-2">
-              <button type="button" className="rounded-full border border-[var(--editable-border)] px-4 py-2 font-black disabled:opacity-40" disabled={currentPage <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>Previous</button>
-              <button type="button" className="rounded-full border border-[var(--editable-border)] px-4 py-2 font-black disabled:opacity-40" disabled={currentPage >= totalPages} onClick={() => setPage((value) => Math.min(totalPages, value + 1))}>Next</button>
+                  {item.articleTitle ? <p className="mt-4 text-sm font-semibold">{item.articleTitle}</p> : null}
+                  <p className="mt-3 whitespace-pre-line text-sm leading-7 text-[var(--slot4-muted-text)]">{item.comment}</p>
+                </article>
+              ))}
             </div>
-          </div>
-        ) : null}
+          ) : (
+            <div className="mx-auto mt-10 max-w-xl rounded-3xl border border-dashed border-[var(--editable-border)] bg-white p-10 text-center">
+              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--slot4-accent-soft)] text-[var(--slot4-accent)]">
+                <MessageSquare className="h-6 w-6" />
+              </span>
+              <h2 className="editable-display mt-5 text-2xl font-bold">No comments yet</h2>
+              <p className="mt-3 text-sm leading-7 text-[var(--slot4-muted-text)]">
+                Leave a comment on any guide and it will show up here on this device.
+              </p>
+              <Link
+                href="/article"
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-[var(--slot4-accent)] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5"
+              >
+                Browse guides <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          )}
+
+          {filtered.length > COMMENTS_PER_PAGE ? (
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-[var(--editable-border)] bg-white px-5 text-sm font-semibold transition hover:border-[var(--slot4-accent)] hover:text-[var(--slot4-accent)] disabled:cursor-not-allowed disabled:opacity-40"
+                disabled={currentPage <= 1}
+                onClick={() => setPage((value) => Math.max(1, value - 1))}
+              >
+                <ArrowLeft className="h-4 w-4" /> Previous
+              </button>
+              <span className="inline-flex h-11 items-center rounded-full bg-[var(--slot4-accent)] px-5 text-sm font-semibold text-white">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                type="button"
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-[var(--editable-border)] bg-white px-5 text-sm font-semibold transition hover:border-[var(--slot4-accent)] hover:text-[var(--slot4-accent)] disabled:cursor-not-allowed disabled:opacity-40"
+                disabled={currentPage >= totalPages}
+                onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+              >
+                Next <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          ) : null}
+        </section>
       </main>
     </EditableSiteShell>
   )
