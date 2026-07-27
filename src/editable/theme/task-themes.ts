@@ -2,13 +2,13 @@ import type { CSSProperties } from 'react'
 import type { TaskKey } from '@/lib/site-config'
 
 /*
-  Yelp-style task surfaces.
+  Task surfaces.
 
-  Every task (archive + detail) now shares one cohesive premium identity:
-  clean white surfaces, the signature Yelp red accent, hairline gray borders
-  and a single crisp sans-serif — exactly like Yelp. Per-task copy (kicker /
-  note) still varies so each section keeps a little voice, but the visual
-  language is unified. Tokens are delivered via CSS variables (`--tk-*`).
+  Every task (archive + detail) shares one cohesive identity: white surfaces,
+  pale blue section bands, the signature royal blue accent, soft hairline
+  borders and the Poppins/DM Sans pairing. Per-task copy (kicker / note) still
+  varies so each section keeps a little voice, but the visual language is
+  unified. Tokens are delivered via CSS variables (`--tk-*`).
 */
 
 export type TaskTheme = {
@@ -27,39 +27,42 @@ export type TaskTheme = {
   line: string
   accent: string
   accentSoft: string
+  accentLight: string
   onAccent: string
   glow: string
   radius: string
 }
 
-const YELP_FONT = "'Inter', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif"
+const DISPLAY_FONT = "'Poppins', 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif"
+const BODY_FONT = "'DM Sans', 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif"
 
-// Shared Yelp palette — every task inherits this; only kicker/note differ.
+// Shared palette — every task inherits this; only kicker/note differ.
 const base = {
   dark: false,
-  fontDisplay: YELP_FONT,
-  fontBody: YELP_FONT,
+  fontDisplay: DISPLAY_FONT,
+  fontBody: BODY_FONT,
   bg: '#ffffff',
   surface: '#ffffff',
-  raised: '#f7f7f7',
-  text: '#1a1a1a',
-  muted: '#6b6b6b',
-  line: '#e6e6e6',
-  accent: '#d32323',
-  accentSoft: '#fdecec',
+  raised: '#eef5fd',
+  text: '#0c1526',
+  muted: '#4d6076',
+  line: '#dfe8f5',
+  accent: '#0b4bc4',
+  accentSoft: '#e6f0fd',
+  accentLight: '#57a6e0',
   onAccent: '#ffffff',
-  glow: 'rgba(211,35,35,0.06)',
-  radius: '0.75rem',
+  glow: 'rgba(11,75,196,0.10)',
+  radius: '1.5rem',
 } satisfies Omit<TaskTheme, 'kicker' | 'note'>
 
 export const taskThemes: Record<TaskKey, TaskTheme> = {
-  article: { ...base, kicker: 'Articles', note: 'In-depth reads, guides and stories worth your time.' },
-  listing: { ...base, kicker: 'Businesses', note: 'Find, compare and connect with local businesses.' },
-  classified: { ...base, kicker: 'Marketplace', note: 'Fresh offers and listings, ready to act on.' },
-  image: { ...base, kicker: 'Photos', note: 'A visual feed of standout images and galleries.' },
-  sbm: { ...base, kicker: 'Bookmarks', note: 'Curated resources and links worth saving.' },
-  pdf: { ...base, kicker: 'Documents', note: 'Downloadable guides, reports and references.' },
-  profile: { ...base, kicker: 'People', note: 'Discover creators, businesses and profiles.' },
+  article: { ...base, kicker: 'Insights', note: 'Practical guides and research for owners choosing where to list and how to grow.' },
+  listing: { ...base, kicker: 'Directory', note: 'Verified businesses with the details that actually help people decide.' },
+  classified: { ...base, kicker: 'Marketplace', note: 'Live offers, equipment and services posted by the local business community.' },
+  image: { ...base, kicker: 'Showcase', note: 'Storefronts, workspaces and projects, seen before you visit.' },
+  sbm: { ...base, kicker: 'Toolkit', note: 'Handpicked links, tools and references worth keeping close.' },
+  pdf: { ...base, kicker: 'Resources', note: 'Downloadable checklists, templates and reports for growing teams.' },
+  profile: { ...base, kicker: 'People', note: 'The owners, specialists and teams behind the businesses you find here.' },
 }
 
 export function getTaskTheme(task: TaskKey): TaskTheme {
@@ -78,6 +81,7 @@ export function taskThemeStyle(task: TaskKey): CSSProperties {
     '--tk-line': t.line,
     '--tk-accent': t.accent,
     '--tk-accent-soft': t.accentSoft,
+    '--tk-accent-light': t.accentLight,
     '--tk-on-accent': t.onAccent,
     '--tk-glow': t.glow,
     '--tk-radius': t.radius,
